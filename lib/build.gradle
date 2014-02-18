@@ -17,8 +17,8 @@ android {
   }
 }
 
+// This bit is just to get Android Studio to see the tests as java sources
 task addTest {
-
   def src = ['src/test/java']
   def file = file("lib.iml")
 
@@ -42,10 +42,10 @@ task addTest {
   }
 }
 
-// always do the addtest on prebuild
 gradle.projectsEvaluated {
   preBuild.dependsOn(addTest)
 }
+// end Android studio source set hack
 
 dependencies {
   compile fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
