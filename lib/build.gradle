@@ -1,0 +1,54 @@
+apply plugin: 'android-library'
+apply plugin: 'robolectric'
+
+android {
+  compileSdkVersion 19
+  buildToolsVersion "19.0.1"
+
+  defaultConfig {
+    minSdkVersion 16
+    targetSdkVersion 19
+    versionCode 1
+    versionName "1.0"
+  }
+  release {
+    runProguard false
+    proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+  }
+}
+
+task addTest {
+
+  def src = ['src/test/java']
+  def file = file("lib.iml")
+
+  doLast {
+    try {
+      def parsedXml = (new XmlParser()).parse(file)
+      def node = parsedXml.component[1].content[0]
+      src.each {
+        def path = 'file://$MODULE_DIR$/' + "${it}"
+        def set = node.find { it.@url == path }
+        if (set == null) {
+          new Node(node, 'sourceFolder', ['url': 'file://$MODULE_DIR$/' + "${it}", 'isTestSource': "true"])
+          def writer = new StringWriter()
+          new XmlNodePrinter(new PrintWriter(writer)).print(parsedXml)
+          file.text = writer.toString()
+        }
+      }
+    } catch (FileNotFoundException e) {
+      // nop, iml not found
+    }
+  }
+}
+
+// always do the addtest on prebuild
+gradle.projectsEvaluated {
+  preBuild.dependsOn(addTest)
+}
+
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+  instrumentTestCompile 'org.robolectric:robolectric:2.+'
+  instrumentTestCompile 'junit:junit:4.+'
+}
